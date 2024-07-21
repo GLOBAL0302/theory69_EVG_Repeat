@@ -1,14 +1,19 @@
 import React from 'react';
 import DishItem from './DishItem';
 import { Dish } from '../../types';
+import {useAppDispatch} from "../../app/hooks.ts";
+import {addDish} from "../../store/cartSlice.ts";
 
 interface Props {
   dishes: Dish[];
-  addToCart: (dish: Dish) => void;
   deleteDish: (id: string) => void;
 }
 
-const Dishes: React.FC<Props> = ({ dishes, addToCart, deleteDish }) => {
+const Dishes: React.FC<Props> = ({ dishes, deleteDish }) => {
+  const dispatch = useAppDispatch()
+  const addDishToCart = (dish:Dish)=>{
+    dispatch(addDish(dish))
+  }
   return (
     <>
       <h4>Dishes</h4>
@@ -16,7 +21,7 @@ const Dishes: React.FC<Props> = ({ dishes, addToCart, deleteDish }) => {
         <DishItem
           key={dish.id}
           dish={dish}
-          addToCart={() => addToCart(dish)}
+          addToCart={() => addDishToCart(dish)}
           onDelete={() => deleteDish(dish.id)}
         />
       ))}

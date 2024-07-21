@@ -1,21 +1,23 @@
-import { useCallback, useEffect, useState } from 'react';
-import { ApiDishes, CartDish, Dish } from './types';
+import {useCallback, useEffect, useState} from 'react';
+import {ApiDishes, Dish} from './types';
 import Home from './containers/Home/Home';
 import NewDish from './containers/NewDish/NewDish';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import {Route, Routes, useLocation} from 'react-router-dom';
 import Checkout from './containers/Checkout/Checkout';
 import Order from './containers/Order/Order';
 import axiosApi from './axiosApi';
 import EditDish from './containers/EditDish/EditDish';
 import Orders from './containers/Orders/Orders';
 import Layout from './components/Layout/Layout';
-import { toast } from 'react-toastify';
+import {toast} from 'react-toastify';
+import {useAppDispatch} from "./app/hooks.ts";
+import {updateDishes} from "./store/cartSlice.ts";
 
 const App = () => {
   const location = useLocation();
+  const dispatch = useAppDispatch()
 
   const [dishes, setDishes] = useState<Dish[]>([]);
-  const [cartDishes, setCartDishes] = useState<CartDish[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchDishes = useCallback(async () => {
@@ -34,35 +36,14 @@ const App = () => {
         }));
 
         setDishes(newDishes);
+        dispatch(updateDishes(newDishes));
       }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [dispatch]);
 
-  const updateCart = useCallback(() => {
-    setCartDishes((cartDishes) => {
-      return cartDishes.reduce<CartDish[]>((acc, cartDish) => {
-        const existingDish = dishes.find(
-          (dish) => dish.id === cartDish.dish.id,
-        );
 
-        if (existingDish) {
-          acc.push({ ...cartDish, dish: existingDish });
-        }
-
-        return acc;
-      }, []);
-    });
-  }, [dishes]);
-
-  const clearCart = () => {
-    setCartDishes([]);
-  };
-
-  useEffect(() => {
-    updateCart();
-  }, [updateCart]);
 
   const deleteDish = async (id: string) => {
     try {
@@ -82,24 +63,7 @@ const App = () => {
     }
   }, [fetchDishes, location]);
 
-  const addDishToCart = (dish: Dish) => {
-    setCartDishes((prevState) => {
-      const existingIndex = prevState.findIndex((cartDish) => {
-        return cartDish.dish.id === dish.id;
-      });
 
-      if (existingIndex === -1) {
-        return [...prevState, { dish, amount: 1 }];
-      } else {
-        return prevState.map((cartDish, index) => {
-          if (index === existingIndex) {
-            return { ...cartDish, amount: cartDish.amount + 1 };
-          }
-          return cartDish;
-        });
-      }
-    });
-  };
 
   return (
     <Layout>
@@ -110,17 +74,15 @@ const App = () => {
             <Home
               dishesLoading={loading}
               dishes={dishes}
-              addToCart={addDishToCart}
-              cartDishes={cartDishes}
               deleteDish={deleteDish}
             />
           }
         />
         <Route path="/new-dish" element={<NewDish />} />
-        <Route path="/checkout" element={<Checkout cartDishes={cartDishes} />}>
+        <Route path="/checkout" element={<Checkout/>}>
           <Route
             path="continue"
-            element={<Order cartDishes={cartDishes} clearCart={clearCart} />}
+            element={<Order/>}
           />
         </Route>
         <Route path="/edit-dish/:id" element={<EditDish />} />
