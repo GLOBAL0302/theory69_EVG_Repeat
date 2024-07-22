@@ -1,14 +1,16 @@
 import React from 'react';
 import { Dish } from '../../types';
 import { Link } from 'react-router-dom';
+import ButtonSpinner from "../Spinner/ButtonSpinner.tsx";
 
 interface Props {
   dish: Dish;
-  addToCart: VoidFunction; // () => void;
   onDelete: VoidFunction;
+  addToCart:VoidFunction;
+  deleteLoading:false | string
 }
 
-const DishItem: React.FC<Props> = ({ dish, addToCart, onDelete }) => {
+const DishItem: React.FC<Props> = ({ dish, deleteLoading, addToCart, onDelete }) => {
   const imageStyle = {
     background: `url(${dish.image}) no-repeat center center / cover`,
   };
@@ -22,10 +24,16 @@ const DishItem: React.FC<Props> = ({ dish, addToCart, onDelete }) => {
           <p className="card-text small">{dish.description}</p>
           <p className="card-text">{dish.price} KGS</p>
           <p className="d-flex gap-2">
-            <button className="btn btn-success" onClick={addToCart}>
+            <button
+                disabled={deleteLoading? deleteLoading === dish.id : false}
+                className="btn btn-success" onClick={addToCart}>
               Add
             </button>
-            <button className="btn btn-danger" onClick={onDelete}>
+            <button
+                disabled={deleteLoading? deleteLoading === dish.id : false}
+                className="btn btn-danger"
+                onClick={onDelete}>
+              {deleteLoading && deleteLoading === dish.id && (<ButtonSpinner/>) }
               Delete
             </button>
             <Link className="btn btn-primary" to={`/edit-dish/${dish.id}`}>

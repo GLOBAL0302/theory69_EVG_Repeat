@@ -1,24 +1,29 @@
-import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
+import {createAsyncThunk} from "@reduxjs/toolkit";
 import axiosApi from "../axiosApi.ts";
 import {ApiDishes, Dish} from "../types.ts";
+import {AppDispatch} from "../app/store.ts";
+import {updateDishes} from "./cartSlice.ts";
 
-export const fetchDishes = createAsyncThunk<Dish[]>("dishes/fetchDishes",
-    async()=>{
+export const fetchDishes = createAsyncThunk<Dish[], undefined, {dispatch:AppDispatch}>("dishes/fetchDishes",
+    async(_args, thunkAPI)=>{
     const dishesResponse = await axiosApi.get<ApiDishes |null>("/dishes.json");
     const dishes = dishesResponse.data;
-    if(!dishes){
-        return[]
+    let newDishes: Dish[] = [];
+    if(dishes){
+        newDishes = Object.keys(dishes).map((id:string)=>{
+            const dish = dishes[id];
+            return {
+                id,
+                ...dish,
+            }
+        });
     }
-    return Object.keys(dishes).map((id:string)=>{
-        const dish = dishes[id];
-        return {
-            id,
-            ...dish,
-        }
-    });
+
+    thunkAPI.dispatch(updateDishes(newDishes))
+    return newDishes
 })
 
-export const deleteDish = createAsyncThunk("dishes/deleteDish",
+export const deleteDish = createAsyncThunk<void, string>("dishes/deleteDish",
     async(dishId)=>{
     await axiosApi.delete(`/dishes/${dishId}.json`)
     })
